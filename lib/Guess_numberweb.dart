@@ -1,6 +1,6 @@
-import 'dart:ui';
-
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:guess_number_wachirawit/game.dart';
 
 void main() {
   runApp(const MyApp());
@@ -9,22 +9,23 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'GUESS THE NUMBER',
       theme: ThemeData(
-        primarySwatch: Colors.indigo,
+        primarySwatch: Colors.blue,
       ),
-      home: const HomePage(),
+      home: HomePage(),
     );
   }
 }
 
 class HomePage extends StatelessWidget {
-  const HomePage({Key? key}) : super(key: key);
+  HomePage({Key? key}) : super(key: key);
 
+  final _controller = TextEditingController();
+  var game = Game();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,63 +33,131 @@ class HomePage extends StatelessWidget {
         title: const Text('GUESS THE NUMBER'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(40.0),
+        padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
         child: Container(
           decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20.0),
-              color: Colors.white,
-              //border: Border.all(width: 5.0, color: Colors.blue),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    offset: const Offset(2.0, 5.0),
-                    blurRadius: 5.0,
-                    spreadRadius: 2.0)
-              ]),
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(16.0),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.purple.shade100,
+                offset: Offset(5.0, 5.0),
+                spreadRadius: 2.0,
+                blurRadius: 5.0,
+              )
+            ],
+          ),
+          alignment: Alignment.center,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              /*Row(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Image.asset(
-                      'assets/images/guess-the-number.png',
-                      width: 100,
-                      height: 100,
-                      //fit: BoxFit.fill,
+                  Container(width: 50.0, height: 50.0, color: Colors.blue),
+                  Expanded(
+                    child: Container(
+                      width: 30.0,
+                      height: 50.0,
+                      //color: Colors.pink,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: Text('FLUTTER', textAlign: TextAlign.end,),
+                      ),
+                      alignment: Alignment.centerRight,
                     ),
                   ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text(
-                        'GUESS',
-                        style: TextStyle(
-                          color: Colors.amber,
-                          fontSize: 50.0,
-                        ),
-                      ),
-                      Text(
-                        'THE NUMBER',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 25.0,
-                        ),
-                      ),
-                    ],
-                  ),
+                  //SizedBox(width: 10.0),
                 ],
+              ),*/
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Image.asset('assets/images/guess-the-number.png', width: 90.0),
+                    SizedBox(width: 8.0),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('GUESS',
+                            style: TextStyle(
+                                fontSize: 36.0, color: Colors.purple.shade200)),
+                        Text(
+                          'THE NUMBER',
+                          style: TextStyle(
+                            fontSize: 18.0,
+                            color: Colors.purple,
+                            //fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(
-                height: 20.0,
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TextField(
+                  decoration: InputDecoration (
+                      border: OutlineInputBorder(
+
+                          borderSide: BorderSide(color : Colors.purple)
+                      ),hintText: "ทายเลยตั้งแต่ 1 - ${Game.defaultMaxRandom}"
+
+                  ),
+                  textAlign: TextAlign.center,
+                  controller: _controller,
+                ),
               ),
-              const Padding(
-                padding:  EdgeInsets.all(32.0),
-                child:  TextField(),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: ElevatedButton(
+                  child: Text('GUESS'),
+                  onPressed: () {
+                    var input = _controller.text;
+                    var number = int.tryParse(input);
+                    String title = "RESULT";
+                    String content="";
+                    if(number == null) {
+                      title = "ERROR";
+                      content =
+                      "กรอกข้อมูลไม่ถูกต้อง ให้กรอกเฉพาะตัวเลขเท่านั้น";
+                    }
+                    else {
+                      var result = game.doGuess(number);
+                      if (result == 1) {
+                        content = "$number มากเกินไป กรุณาลองใหม่" ;
+
+                      } else if (result == -1) {
+                        content = "$number น้อยเกินไป กรุณาลองใหม่" ;
+                      } else if (result == 0) {
+                        content = "$number ถูกต้องครับ \nคุณทายทั้งหมด ${game.guessCount} ครั้ง" ;
+
+                      }
+
+                    }
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text(title),
+                          content: Text(content),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Text('OK'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-              ElevatedButton(onPressed: (){}, child: const Text('GUESS')),
             ],
           ),
         ),
